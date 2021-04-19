@@ -1,0 +1,31 @@
+﻿@inherits LayoutComponentBase
+
+
+@*<div class="sidebar">
+    <NavMenu />
+</div>
+
+<div class="main">
+
+    <div class="content px-4">
+        @Body
+    </div>
+</div>*@
+
+<div class="wrapper">
+    <NavMenu />
+    <div class="content">
+        <main>
+            @Body
+        </main>
+    </div>
+    <footer>
+        <div class="left">Copyright : Oláh Erik , Email: olah.erik0129@gmail.com</div>
+        <div class="right">
+        </div>
+    </footer>
+</div>
+
+@code{
+   
+}

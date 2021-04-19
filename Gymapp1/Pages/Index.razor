@@ -1,0 +1,465 @@
+﻿@page "/foglalas"
+@using Gymapp1.Data
+@using NodaTime;
+@using Gymapp1.Models
+@using DataConnection
+@using Microsoft.Extensions.Configuration
+@inject Gymapp1.IService.IDayEventService dayEventService
+@inject IDataAccess _data
+@inject IConfiguration _config
+@inject TESZT teszt
+@inject Gymapp1.Service.IMailService MailService
+@using System.Globalization
+@inject IJSRuntime JsRunTime
+
+<style type="text/css">
+    #tblParent tbody tr td {
+        width: 200px;
+        height: 200px;
+    }
+
+    #divParent {
+        position: relative;
+    }
+
+    #divModal {
+        z-index: 10;
+        position: absolute;
+        border: 1px solid #000000;
+        border-radius: 3px;
+        background-color: #ffffff;
+        left: 40%;
+        top: 20%;
+        width: 400px;
+        min-height: 300px;
+    }
+
+    .modalHeading {
+        text-align: center;
+        font-size: 50px;
+        text-decoration: underline;
+        margin-bottom: 36px;
+    }
+</style>
+<html lang="hu">
+<head>
+    <meta charset="utf-8" />
+
+</head>
+<h1 style="text-align:center">Idopont Foglalas</h1>
+<EditForm Model="@dayEvent" OnValidSubmit="@SaveNote">
+    <DataAnnotationsValidator />
+
+    @if (displayModal)
+    {
+
+<div id="divModal">
+    <div class="container">
+        <div class="panel panel-default">
+            <div class="panel-heading modalHeading">Idopont foglalas</div>
+            <div class="panel-body">
+                <div class="row">
+                    <div class="col-md-4">
+                        <label>Melyik nap : </label>
+                    </div>
+
+                    <div class="col-md-8">
+                        <input type="date" @bind-value="@dayEvent.FromDate" style="width:100%;" />
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-4">
+                    <label>Vezetéknév : </label>
+                </div>
+                <div class="col-md-8">
+                    <InputText id="name" @bind-Value="dayEvent.FirstName" />
+                    <ValidationMessage For="() => dayEvent.FirstName" />
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-4">
+                    <label>Keresztnév : </label>
+                </div>
+                <div class="col-md-8">
+                    <InputText id="Lastname" @bind-Value="dayEvent.LastName" />
+                    <ValidationMessage For="() => dayEvent.LastName" />
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-4">
+                    <label>Telefonszám : </label>
+                </div>
+                <div class="col-md-8">
+                    <InputText id="Tel" @bind-Value="dayEvent.Tel" />
+                    <ValidationMessage For="() => dayEvent.Tel" />
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-4">
+                    <label>Email : </label>
+                </div>
+                <div class="col-md-8">
+                    <InputText id="Email" @bind-Value="dayEvent.Email" />
+                    <ValidationMessage For="() => dayEvent.Email" />
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-4">
+                    <label>Idopont : </label>
+                </div>
+                <div class="col-md-8">
+                    <select @bind="selected.SelectedTime">
+                        @foreach (var t in Ido)
+                        {
+    <option>@t.IdoPont</option>
+}
+
+                    </select>
+
+                    <ValidationMessage For="() => selected.SelectedTime" />
+                    @ErrorMessage
+                    @Message
+
+
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-4">
+                    <label>Megjegyzés : </label>
+                </div>
+                <div class="col-md-8">
+                    <input type="text" @bind-value="@dayEvent.Note" placeholder="Nem kötelező..." />
+                </div>
+            </div>
+            <div class="row" style="margin-bottom:10px;">
+                <div class="col-md-6">
+                </div>
+                <div class="col-md-6" style="text-align:right;">
+                    <button type="submit" class="btn btn-success" style="float:left;margin-right:5px;">Mentés</button>
+                    <button class="btn btn-danger" @onclick="CloseModal" style="float:left;">Bezár</button>
+
+                </div>
+            </div>
+            <section>
+                <div>
+
+                </div>
+            </section>
+        </div>
+    </div>
+</div>}
+</EditForm>
+
+<select @onchange="TESZT">
+    @foreach (string monthName in monthNames.Take(12))
+    {
+<option>@monthName</option>
+}
+</select>
+
+<button @onclick="deleteWeek" class="btn btn-light">Előző Hét</button>
+
+<button @onclick="newWeek" class="btn btn-light">Következő hét</button>
+<div style="overflow-x:auto;">
+    <table class="table table-bordered table-striped">
+        <thead>
+            <tr>
+                @for (var dayIndex = 0; dayIndex < days.Count(); dayIndex++)
+                {
+    <th>
+        @days[dayIndex]
+    </th>}
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                @for (var dayIndex = 0; dayIndex < weeks[tmp].Dates.Count(); dayIndex++)
+                {
+                    var wIndex = tmp;
+                    var dIndex = dayIndex;
+
+    <td @ondblclick="@(() => OpenModal(wIndex, dIndex))">
+        @weeks[tmp].Dates[dayIndex].DateValue
+
+        <br /><br />
+
+
+        Szabad Időpontok @(Ido.Count()*4)/@CheckBookedDates(weeks[tmp].Dates[dayIndex].DateValue)
+
+        <br /><br />
+    </td>}
+
+            </tr>
+        </tbody>
+    </table>
+
+</div>
+</html>
+@code{ string proba = "Mainap";
+
+    public int counter = 0;
+    DayEvent dayEvent = new DayEvent()
+    {
+        FromDate = DateTime.Now,
+        ToDate = DateTime.Now,
+        Note = "",
+
+    };
+    TimeModel selected = new TimeModel()
+    {
+        SelectedTime = ""
+    };
+    bool displayModal = false;
+    List<string> monthNames = new List<string>();
+    List<string> days = new List<string>();
+    List<WeekClass> weeks = new List<WeekClass>();
+    DateTime startDate = new DateTime(DateTime.Now.Year, DateTime.Now.Month, 1);
+    DateTime date = DateTime.UtcNow;
+    DateTime endDate = (new DateTime(DateTime.Now.Year, DateTime.Now.Month, 1)).AddMonths(1).AddDays(-1);
+    int selectedWeekIndex = -1;
+    int selectedDayIndex = -1;
+    public bool Success { get; set; }
+
+
+
+    protected override void OnInitialized()
+    {
+        monthNames = System.Globalization.CultureInfo.CurrentCulture.DateTimeFormat.MonthGenitiveNames.ToList();
+        GenerateCalenderHead();
+        GenerateCalenderBody();
+        LoadCalender(date.ToString("MMMM"));
+
+    }
+    public void LoadCalender(string Month)
+    {
+
+        var month = Month;
+        int monthIndex = DateTime.ParseExact(month, "MMMM", CultureInfo.CreateSpecificCulture("en-GB")).Month;
+        startDate = new DateTime(DateTime.Now.Year, monthIndex, 1);
+        endDate = (new DateTime(DateTime.Now.Year, monthIndex, 1)).AddMonths(1).AddDays(-1);
+        GenerateCalenderHead();
+        GenerateCalenderBody();
+        StateHasChanged();
+
+    }
+    public void TESZT(ChangeEventArgs e)
+    {
+        var month = e.Value.ToString().ToLower();
+        int tmp = DateTime.ParseExact(month, "MMMM", System.Globalization.CultureInfo.CreateSpecificCulture("en-GB")).Month;
+        date = new DateTime(DateTime.Now.Year, tmp, 1);
+        LoadCalender(month);
+    }
+
+    private void GenerateCalenderHead()
+    {
+        var day1 = new List<string>();
+
+        for (var dt = startDate; dt <= endDate; dt = dt.AddDays(1))
+        {
+            day1.Add(dt.ToString("dddd"));
+        }
+        days = day1.Distinct().ToList();
+
+
+    }
+
+    private void GenerateCalenderBody()
+    {
+        weeks = new List<WeekClass>();
+        var dayEvents = dayEventService.GetEvents(startDate, endDate);
+
+        int flag = 0;
+        WeekClass week = new WeekClass();
+        List<DayEvent> dates = new List<DayEvent>();
+        var totalDays = (int)(endDate - startDate).TotalDays;
+        int countdays = 0;
+        for (var dt = startDate; dt <= endDate; dt = dt.AddDays(1))
+        {
+            flag++;
+
+            var currentObject = dayEvents.Find(x => x.EventDate.ToString("dd-MMM-yyyy") == dt.ToString("dd-MMM-yyyy"));
+
+            dates.Add(new DayEvent()
+            {
+                id = currentObject == null ? 0 : currentObject.id,
+                DateValue = dt.ToString("dd-MMM-yyyy"),
+                DayName = dt.ToString("dddd"),
+            });
+
+            if (flag == 7)
+            {
+                week = new WeekClass();
+                week.Dates = dates;
+                weeks.Add(week);
+
+                dates = new List<DayEvent>();
+                flag = 0;
+            }
+            if (countdays == totalDays)
+            {
+                week = new WeekClass();
+                week.Dates = dates;
+                weeks.Add(week);
+                break;
+            }
+            countdays++;
+        }
+    }
+    private void CloseModal()
+    {
+        ResetModal();
+    }
+    private void OpenModal(int wIndex, int dIndex)
+    {
+        selectedWeekIndex = wIndex;
+        selectedDayIndex = dIndex;
+
+        var dayEventObj = dayEventService.GetEvent(Convert.ToDateTime(weeks[wIndex].Dates[dIndex].DateValue));
+        dayEvent = dayEventObj;
+
+        displayModal = true;
+    }
+
+    private void ResetModal()
+    {
+        displayModal = false;
+        selectedDayIndex = -1;
+        selectedWeekIndex = -1;
+    }
+    List<TimeModel> Ido = new List<TimeModel>();
+    List<int> Id = new List<int>();
+    List<string> datumok = new List<string>();
+    protected override async Task OnInitializedAsync()
+    {
+        string sql = "select * from idopontok";
+        string sql1 = "SELECT id FROM Foglalt";
+        Id = await _data.LoadData<int, dynamic>(sql1, new { }, _config.GetConnectionString("default"));
+        Ido = await _data.LoadData<TimeModel, dynamic>(sql, new { }, _config.GetConnectionString("default"));
+
+    }
+    public string ErrorMessage { get; set; }
+    public string Message { get; set; }
+
+    async Task SaveNote()
+    {
+
+        if (dayEvent.EventDate >= DateTime.Today)
+        {
+
+
+            //  ErrorMessage = "Foglalt";
+            if (await CheckIfDateIsTaken(dayEvent.EventDate, selected.SelectedTime))
+            {
+                ErrorMessage = "Foglalt";
+                //  Message = "Válasz egy aktuális dátumot";
+            }
+            else
+            {
+                int result = teszt.teszt(dayEvent.Note, dayEvent.EventDate, selected.SelectedTime, dayEvent.FirstName, dayEvent.LastName, dayEvent.Tel, dayEvent.Email);
+                Success = true;
+                StateHasChanged();
+                SendMail(result);
+                StateHasChanged();
+                ResetModal();
+                ErrorMessage = "";
+                Message = "";
+                ShowAlert();
+            }
+        }
+        else
+        {
+            Message = "Válasz egy aktuális dátumot";
+        }
+
+
+
+
+    }
+
+    private async Task<Boolean> CheckIfDateIsTaken(DateTime date, string time)
+    {
+        bool isTaken = false;
+        string sql = "SELECT * FROM Foglalt WHERE EventDate='" + date.ToString("yyyy-MM-dd") + "' AND IdoPont='" + time + "'";
+        List<int> results = await _data.LoadData<int, dynamic>(sql, new { }, _config.GetConnectionString("default"));
+        if (results.Count >= 4)
+        {
+            isTaken = true;
+            return isTaken;
+
+        }
+        else
+        {
+            isTaken = false;
+            return isTaken;
+        }
+
+
+    }
+
+    private int CheckBookedDates(string date)
+    {
+        var Date = DateTime.Parse(date);
+        int number = teszt.CheckBookedTimes(Date);
+
+        return number;
+    }
+
+
+
+    [Parameter]
+    public int tmp { get; set; }
+    public int tmp1 { get; set; }
+    public DateTime month { get; set; }
+    public int szamlalo { get; set; } = 470;
+    public void newWeek()
+    {
+        DateTime tmpdate = date;
+        if (tmp <= 3)
+        {
+            tmp = tmp + 1;
+        }
+        else
+        {
+            date = date.AddMonths(1);
+            LoadCalender(date.ToString("MMMM").ToLower());
+            tmp = 0;
+
+
+
+        }
+
+    }
+    void deleteWeek()
+    {
+        if (tmp > 0)
+        {
+            tmp -= 1;
+        }
+        else
+        {
+            date = date.AddMonths(-1);
+            LoadCalender(date.ToString("MMMM").ToLower());
+            //tmp = 0;
+        }
+
+    }
+
+    public async Task SendMail(int result)
+    {
+        string uzenet = "Foglalás visszaigazolás GymApp";
+        if (Success == true)
+        {
+
+            await MailService.SendEmailAsync(dayEvent.Email, uzenet, "<div class=" + "wrapper" + "><div class=" + "emailheader" + "><h2> Kedves " + dayEvent.FirstName + "&nbsp; " + dayEvent.LastName + "!!!</div><div class=" + "emailbody" + "><p>Köszönjük foglalásod Az időpontod:  <strong>" + dayEvent.EventDate.ToString("dddd/MMMM/yyyy") + ":" + selected.SelectedTime + ".</strong></p><br><br> <p>A foglalási kódod a következő: <strong>" + result + " .</strong></p> <p>Ha foglalásod le szeretnéd mondani <a class=" + "text" + " href=" + "https://localhost:5001/torles" + ">Ide Kattintva</a> elvégezheted. </p><p>Nem kell mást tenned mint beírni a foglalási kódód illetve a Keresztnév illetve Vezetékneved.</p> <br><br>  <h2>Várjuk a találkozást a Gymapp Csapata</h2></div> </div>");
+
+
+
+        }
+
+    }
+    async Task ShowAlert()
+    {
+        await JsRunTime.InvokeVoidAsync("submit");
+    } }
+

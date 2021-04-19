@@ -1,0 +1,321 @@
+﻿@page "/foglalas"
+@using Gymapp1.Data
+@using Gymapp1.Models
+@using DataConnection
+@using Microsoft.Extensions.Configuration
+@inject Gymapp1.IService.IDayEventService dayEventService
+@inject IDataAccess _data
+@inject IConfiguration _config
+@inject TESZT teszt
+@attribute [Authorize] 
+
+
+<style type="text/css">
+    #tblParent tbody tr td {
+        width: 200px;
+        height: 200px;
+    }
+
+    #divParent {
+        position: relative;
+    }
+
+    #divModal {
+        z-index: 10;
+        position: absolute;
+        border: 1px solid #000000;
+        border-radius: 3px;
+        background-color: #ffffff;
+        left: 40%;
+        top: 20%;
+        width: 400px;
+        min-height: 300px;
+    }
+
+    .modalHeading {
+        text-align: center;
+        font-size: 50px;
+        text-decoration: underline;
+        margin-bottom: 36px;
+    }
+</style>
+<AuthorizeView>
+    <h1>Idopont Foglalas</h1>
+
+    @if (displayModal)
+    {
+<div id="divModal">
+    <div class="container">
+        <div class="panel panel-default">
+            <div class="panel-heading modalHeading">Set Note</div>
+            <div class="panel-body">
+                <div class="row">
+                    <div class="col-md-4">
+                        <label>From Date : </label>
+                    </div>
+                    <div class="col-md-8">
+                        <input type="date" @bind-value="@dayEvent.FromDate" style="width:100%;" />
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-4">
+                    <label>To Date : </label>
+                </div>
+                <div class="col-md-8">
+                    <input type="date" @bind-value="@dayEvent.ToDate" style="width:100%;" />
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-4">
+                    <label>Note : </label>
+                </div>
+                <div class="col-md-8">
+                    <input type="text" @bind-value="@dayEvent.Note" placeholder="Type here..." />
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-4">
+                    <label>Idopont : </label>
+                </div>
+                <div class="col-md-8">
+                    <select @bind="SelectedTime">
+                        @foreach (var t in Ido)
+                        {
+                <option>@t.IdoPont</option>}
+
+                    </select>
+                </div>
+            </div>
+            <div class="row" style="margin-bottom:10px;">
+                <div class="col-md-6">
+                </div>
+                <div class="col-md-6" style="text-align:right;">
+                    <button class="btn btn-success" @onclick="SaveNote" style="float:left;margin-right:5px;">Save</button>
+                    <button class="btn btn-danger" @onclick="CloseModal" style="float:left;">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>}
+
+    <select @onchange="TESZT">
+        @foreach (string monthName in monthNames)
+        {
+<option>@monthName</option>}
+    </select>
+
+    <button @onclick="deleteWeek" class="btn btn-primary">PriWeek</button>
+
+    <button @onclick="newWeek" class="btn btn-primary">NewWeek</button>
+
+    <table class="table table-bordered table-striped">
+        <thead>
+            <tr>
+                @for (var dayIndex = 0; dayIndex < days.Count(); dayIndex++)
+                {
+<th>
+    @days[dayIndex]
+</th>
+}
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                @for (var dayIndex = 0; dayIndex < weeks[tmp].Dates.Count(); dayIndex++)
+                {
+                    var wIndex = tmp;
+                    var dIndex = dayIndex;
+
+<td @ondblclick="@(() => OpenModal(wIndex, dIndex))">
+    @weeks[tmp].Dates[dayIndex].DateValue
+    <br /><br />
+
+    <label style="color:#c00;font-weight:bold">@weeks[tmp].Dates[dayIndex].Note</label>
+    <br /><br />
+
+    Cell Number : [@tmp, @dayIndex]
+</td>
+}
+            </tr>
+        </tbody>
+    </table>
+</AuthorizeView>
+
+
+@code{ DayEvent dayEvent = new DayEvent()
+    {
+        FromDate = DateTime.Now,
+        ToDate = DateTime.Now,
+        Note = ""
+    };
+
+    bool displayModal = false;
+    List<string> monthNames = new List<string>();
+    List<string> days = new List<string>();
+    List<WeekClass> weeks = new List<WeekClass>();
+    DateTime startDate = new DateTime(DateTime.Now.Year, DateTime.Now.Month, 1);
+    DateTime date = DateTime.UtcNow;
+    DateTime endDate = (new DateTime(DateTime.Now.Year, DateTime.Now.Month, 1)).AddMonths(1).AddDays(-1);
+    int selectedWeekIndex = -1;
+    int selectedDayIndex = -1;
+
+    protected override void OnInitialized()
+    {
+        monthNames = System.Globalization.CultureInfo.CurrentCulture.DateTimeFormat.MonthGenitiveNames.ToList();
+        GenerateCalenderHead();
+        GenerateCalenderBody();
+        LoadCalender(date.ToString("MMMM"));
+    }
+    public void LoadCalender(string Month)
+    {
+
+        var month = Month;
+        int monthIndex = DateTime.ParseExact(month, "MMMM", System.Globalization.CultureInfo.CreateSpecificCulture("en-GB")).Month;
+        startDate = new DateTime(DateTime.Now.Year, monthIndex, 1);
+        endDate = (new DateTime(DateTime.Now.Year, monthIndex, 1)).AddMonths(1).AddDays(-1);
+        GenerateCalenderHead();
+        GenerateCalenderBody();
+        StateHasChanged();
+
+    }
+    public void TESZT(ChangeEventArgs e)
+    {
+        var month = e.Value.ToString().ToLower();
+        int tmp = DateTime.ParseExact(month, "MMMM", System.Globalization.CultureInfo.CreateSpecificCulture("en-GB")).Month;
+        date = new DateTime(DateTime.Now.Year, tmp, 1);
+        LoadCalender(month);
+    }
+
+    private void GenerateCalenderHead()
+    {
+        var day1 = new List<string>();
+        for (var dt = startDate; dt <= endDate; dt = dt.AddDays(1))
+        {
+            day1.Add(dt.ToString("dddd"));
+        }
+        days = day1.Distinct().ToList();
+    }
+    private void GenerateCalenderBody()
+    {
+        weeks = new List<WeekClass>();
+        var dayEvents = dayEventService.GetEvents(startDate, endDate);
+
+        int flag = 0;
+        WeekClass week = new WeekClass();
+        List<DayEvent> dates = new List<DayEvent>();
+        var totalDays = (int)(endDate - startDate).TotalDays;
+        int countdays = 0;
+
+        for (var dt = startDate; dt <= endDate; dt = dt.AddDays(1))
+        {
+            flag++;
+
+            var currentObject = dayEvents.Find(x => x.EventDate.ToString("dd-MMM-yyyy") == dt.ToString("dd-MMM-yyyy"));
+
+            dates.Add(new DayEvent()
+            {
+                DayEventId = currentObject == null ? 0 : currentObject.DayEventId,
+                DateValue = dt.ToString("dd-MMM-yyyy"),
+                DayName = dt.ToString("dddd"),
+                Note = currentObject == null ? "" : currentObject.Note
+            });
+
+            if (flag == 7)
+            {
+                week = new WeekClass();
+                week.Dates = dates;
+                weeks.Add(week);
+
+                dates = new List<DayEvent>();
+                flag = 0;
+            }
+            if (countdays == totalDays)
+            {
+                week = new WeekClass();
+                week.Dates = dates;
+                weeks.Add(week);
+                break;
+            }
+            countdays++;
+        }
+    }
+    private void CloseModal()
+    {
+        ResetModal();
+    }
+    private void OpenModal(int wIndex, int dIndex)
+    {
+        selectedWeekIndex = wIndex;
+        selectedDayIndex = dIndex;
+
+        var dayEventObj = dayEventService.GetEvent(Convert.ToDateTime(weeks[wIndex].Dates[dIndex].DateValue));
+        dayEvent = dayEventObj;
+
+        displayModal = true;
+    }
+
+    private void ResetModal()
+    {
+        displayModal = false;
+        selectedDayIndex = -1;
+        selectedWeekIndex = -1;
+    }
+    List<TimeModel> Ido = new List<TimeModel>();
+    string SelectedTime;
+    protected override async Task OnInitializedAsync()
+    {
+        string sql = "select * from idopontok";
+
+        Ido = await _data.LoadData<TimeModel, dynamic>(sql, new { }, _config.GetConnectionString("default"));
+        
+  
+
+    }
+    private async Task SaveNote()
+    {
+        //string sql = "INSERT INTO DayEvent(Note, EventDate) values (@Note, @EventDate);";
+        // string sql = "insert into Foglalt(Note, EventDate, IdoPont) select tbl1.`Note`,tbl1.`EventDate`,tbl2.`IdoPont` from DayEvent tbl1,idopontok tbl2;";
+        // string sql = "INSERT INTO DayEvent(Note, EventDate, idopont) values (@Note, @EventDate, @idopont) SELECT * FROM idopontok ORDER BY EventDate ASC";
+
+        //  _data.SaveData(sql, new { dayEvent.Note, dayEvent.EventDate }, _onfig.GetConnectionString("default"));
+        teszt.teszt(dayEvent.Note, dayEvent.EventDate,SelectedTime);
+        ResetModal();
+    }
+
+
+    [Parameter]
+    public int tmp { get; set; }
+    public int tmp1 { get; set; }
+    public DateTime month { get; set; }
+    public void newWeek()
+    {
+        DateTime tmpdate = date;
+        if (tmp <= 3)
+        {
+            tmp = tmp + 1;
+        }
+        else
+        {
+            date = date.AddMonths(1);
+            LoadCalender(date.ToString("MMMM").ToLower());
+            tmp = 0;
+
+
+
+        }
+
+    }
+    void deleteWeek()
+    {
+        if (tmp > 0)
+        {
+            tmp -= 1;
+        }
+        else
+        {
+            date = date.AddMonths(-1);
+            LoadCalender(date.ToString("MMMM").ToLower());
+            //tmp = 0;
+        }
+    } }

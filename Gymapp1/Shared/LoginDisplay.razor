@@ -1,0 +1,12 @@
+﻿<AuthorizeView>
+    <Authorized>
+        <a href="Identity/Account/Manage">Szia, @context.User.Identity.Name!</a>
+        <form method="post" action="Identity/Account/LogOut">
+            <button type="submit" class="nav-link btn btn-link">Kijelentkezés</button>
+        </form>
+    </Authorized>
+    <NotAuthorized>
+            @*<li><a href="Identity/Account/Register"><span class="glyphicon glyphicon-user"></span> Regisztráció</a></li>*@
+            <li><a href="Identity/Account/Login"><span class="glyphicon glyphicon-log-in"></span> Bejelentkezés</a></li>
+    </NotAuthorized>
+</AuthorizeView>

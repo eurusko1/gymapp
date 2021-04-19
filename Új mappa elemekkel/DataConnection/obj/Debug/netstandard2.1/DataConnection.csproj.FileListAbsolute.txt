@@ -1,0 +1,9 @@
+/Users/erikolah/Projects/Gymapp1/DataConnection/bin/Debug/netstandard2.1/DataConnection.deps.json
+/Users/erikolah/Projects/Gymapp1/DataConnection/bin/Debug/netstandard2.1/DataConnection.dll
+/Users/erikolah/Projects/Gymapp1/DataConnection/bin/Debug/netstandard2.1/DataConnection.pdb
+/Users/erikolah/Projects/Gymapp1/DataConnection/obj/Debug/netstandard2.1/DataConnection.csprojAssemblyReference.cache
+/Users/erikolah/Projects/Gymapp1/DataConnection/obj/Debug/netstandard2.1/DataConnection.AssemblyInfoInputs.cache
+/Users/erikolah/Projects/Gymapp1/DataConnection/obj/Debug/netstandard2.1/DataConnection.AssemblyInfo.cs
+/Users/erikolah/Projects/Gymapp1/DataConnection/obj/Debug/netstandard2.1/DataConnection.csproj.CoreCompileInputs.cache
+/Users/erikolah/Projects/Gymapp1/DataConnection/obj/Debug/netstandard2.1/DataConnection.dll
+/Users/erikolah/Projects/Gymapp1/DataConnection/obj/Debug/netstandard2.1/DataConnection.pdb

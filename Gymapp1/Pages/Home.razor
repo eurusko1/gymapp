@@ -1,0 +1,88 @@
+﻿@page "/"
+@using DataConnection
+@using Microsoft.Extensions.Configuration
+@inject Gymapp1.IService.IDayEventService dayEventService
+@inject IDataAccess _data
+@inject IConfiguration _config
+
+    <div class="leftContent">
+        <div class='leftCCon'>
+            <a class="btn btn-light" href="foglalas">Csatlakozz!</a>
+            <div class='bborder'></div>
+            <p>Unod, hogy egyedül edzel? Gyere és segítünk, személyi edzést tartunk mindenkinek!</p>
+            <p>Az emberek átlagosan @displayTime töltenek edzéssel.</p>
+        </div>
+    </div>
+
+    <div class="rightContent">
+
+        <div class='solutionsTab ts'>
+            <h2>Felmérünk</h2>
+            <div class='bborder'></div>
+            <p>Felmérjük állóképességed,jelenlegi állapotodat, és segítünk tested kimaxolásában.</p>
+        </div>
+
+        <div class='solutionsTab cc'>
+            <h2>Személyre Szabott </h2>
+            <div class='bborder'></div>
+            <p>Személyre szabott, edzéstervvel illetve diétával segítjük célod elérését.</p>
+        </div>
+
+        <div class='solutionsTab ss'>
+            <h2>Csoportos edzések</h2>
+            <div class='bborder'></div>
+            <p>Ha szereted a pörgős csoportos edzéseket, jó helyen jársz!</p>
+        </div>
+
+        <div class='solutionsTab cps'>
+            <h2>Szeretsz szaunázni?</h2>
+            <div class='bborder'></div>
+            <p>Öltözőinkben mindkét nemnek saját szaunájuk van a gyorsabb regeneráció érdekében.</p>
+        </div>
+
+        <div class='solutionsTab be'>
+            <h2>Fontos a szín!</h2>
+            <div class='bborder'></div>
+            <p>Igénybe veheted szoláriumainkat is.</p>
+        </div>
+
+        <div class='solutionsTab ob'>
+            <h2>Túlzsúfoltság?</h2>
+            <div class='bborder'></div>
+            <p>Nem szereted a teremben a túl sok embert? Csatlakozz a privát termünkhez te is!</p>
+        </div>
+
+    </div>
+@code {
+    string displayTime = "";
+    DateTime dateTimeObject = new DateTime();
+    public int proba = 0;
+    public int average = 0;
+    List<int> diftime = new List<int>();
+    public string asd = "lesfut";
+    protected override async Task OnInitializedAsync()
+    {
+
+        string sql = "SELECT TIMESTAMPDIFF(SECOND,Erkezes,Tavozas) from Foglalt WHERE Erkezes and Tavozas IS NOT NULL";
+        diftime = await _data.LoadData<int, dynamic>(sql, new { }, _config.GetConnectionString("default"));
+        Console.WriteLine(diftime.Count());
+        for (int i = 0; i < diftime.Count(); i++)
+        {
+
+            diftime = await _data.LoadData<int, dynamic>(sql, new { }, _config.GetConnectionString("default"));
+            proba += diftime[i];
+
+
+        };
+
+        average = proba / diftime.Count();
+
+        TimeSpan time = TimeSpan.FromSeconds(average);
+        DateTime dateTime = DateTime.Today.Add(time);
+        displayTime = dateTime.ToString("HH:mm:ss");
+
+    }
+}
+
+
+

@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.808.4
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Gymapp1", "Gymapp1\Gymapp1.csproj", "{62C3D6A8-4854-4BBF-93A0-483B2F95966B}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DataConnection", "DataConnection\DataConnection.csproj", "{5866BBF8-495B-419C-AAFF-982647FAA9AB}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{62C3D6A8-4854-4BBF-93A0-483B2F95966B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{62C3D6A8-4854-4BBF-93A0-483B2F95966B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{62C3D6A8-4854-4BBF-93A0-483B2F95966B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{62C3D6A8-4854-4BBF-93A0-483B2F95966B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5866BBF8-495B-419C-AAFF-982647FAA9AB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5866BBF8-495B-419C-AAFF-982647FAA9AB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5866BBF8-495B-419C-AAFF-982647FAA9AB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5866BBF8-495B-419C-AAFF-982647FAA9AB}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {BFBDB8F6-74F3-41FA-A720-661979048A4A}
+	EndGlobalSection
+EndGlobal

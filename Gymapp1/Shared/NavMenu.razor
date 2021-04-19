@@ -1,0 +1,44 @@
+﻿<nav class="nav navbarr navbar-expand-lg navbar-light">
+        <a class="navbar-brand" @onclick="ToggleNavMenu" href="/">GymApp</a>
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarText">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarText">
+            <ul class="navbar-nav mr-auto ">
+                <li class="nav-item active">
+                    <a class="nav-link" href="/">Home <span class="sr-only">(current)</span></a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="foglalas">Foglalás</a>
+                </li>
+                <AuthorizeView>
+                    <li class="nav-item">
+                        <a class="nav-link" href="foglalt">Foglalt</a>
+                    </li>
+                </AuthorizeView>
+                <li class="nav-item">
+                    <a class="nav-link" href="elerhetoseg">Elerhetőség</a>
+                </li>
+                <li class="nav-item">
+                    <LoginDisplay />
+                </li>
+            </ul>
+
+        </div>
+    </nav>
+
+
+
+@code {
+
+
+    private bool collapseNavMenu = true;
+
+    private string NavMenuCssClass => collapseNavMenu ? "collapse" : null;
+
+    private void ToggleNavMenu()
+    {
+        collapseNavMenu = !collapseNavMenu;
+    }
+
+}
